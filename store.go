@@ -32,6 +32,7 @@ type BackupSettings struct {
 type BackupRecord struct {
 	ID           string
 	Status       string // "running" | "success" | "failed"
+	TriggeredBy  string // "manual" | "scheduled"
 	Filename     string
 	SizeBytes    int64
 	ProviderName string

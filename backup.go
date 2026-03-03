@@ -124,8 +124,9 @@ func (m *Manager) Stop() {
 }
 
 // RunBackup executes a backup immediately.
+// triggeredBy should be "manual" or "scheduled".
 // Returns ErrBackupInProgress if a backup is already running.
-func (m *Manager) RunBackup(ctx context.Context) (*BackupRecord, error) {
+func (m *Manager) RunBackup(ctx context.Context, triggeredBy string) (*BackupRecord, error) {
 	if !atomic.CompareAndSwapInt32(&m.running, 0, 1) {
 		return nil, ErrBackupInProgress
 	}
@@ -140,7 +141,8 @@ func (m *Manager) RunBackup(ctx context.Context) (*BackupRecord, error) {
 	if err != nil {
 		return nil, fmt.Errorf("backup: failed to load settings: %w", err)
 	}
-	if !settings.Enabled {
+	// Only scheduled runs respect the Enabled flag; manual runs always proceed.
+	if triggeredBy != "manual" && !settings.Enabled {
 		return nil, fmt.Errorf("backup: backups are disabled")
 	}
 
@@ -160,6 +162,7 @@ func (m *Manager) RunBackup(ctx context.Context) (*BackupRecord, error) {
 
 	rec := &BackupRecord{
 		Status:       "running",
+		TriggeredBy:  triggeredBy,
 		Filename:     filename,
 		ProviderName: m.provider.Name(),
 		StartedAt:    now,
@@ -190,7 +193,7 @@ func (m *Manager) RunBackup(ctx context.Context) (*BackupRecord, error) {
 	sz, _ := tmp.Seek(0, 2) // seek to end to get size
 	_, _ = tmp.Seek(0, 0)   // rewind
 
-	result, err := m.provider.Upload(ctx, filename, tmp, sz)
+	result, err := m.provider.Upload(ctx, filename, tmp, sz, settings.FolderID)
 	tmp.Close()
 	if err != nil {
 		rec.Status = "failed"

@@ -8,7 +8,7 @@ import (
 
 // StorageProvider is the interface that any remote storage backend must implement.
 type StorageProvider interface {
-	Upload(ctx context.Context, name string, r io.Reader, size int64) (*UploadResult, error)
+	Upload(ctx context.Context, name string, r io.Reader, size int64, folderID string) (*UploadResult, error)
 	Delete(ctx context.Context, fileID string) error
 	ListFolders(ctx context.Context, parentID string) ([]*Folder, error)
 	CreateFolder(ctx context.Context, name, parentID string) (*Folder, error)

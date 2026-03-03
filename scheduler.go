@@ -31,7 +31,7 @@ func (s *backupScheduler) reschedule(expr string) error {
 	}
 	id, err := s.c.AddFunc(expr, func() {
 		ctx := context.Background()
-		rec, err := s.manager.RunBackup(ctx)
+		rec, err := s.manager.RunBackup(ctx, "scheduled")
 		if err != nil {
 			log.Printf("[go-backup] scheduled backup failed: %v", err)
 			return

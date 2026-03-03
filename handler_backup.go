@@ -72,7 +72,7 @@ func (m *Manager) handleStatus(w http.ResponseWriter, r *http.Request) {
 }
 
 func (m *Manager) handleTrigger(w http.ResponseWriter, r *http.Request) {
-	rec, err := m.RunBackup(r.Context())
+	rec, err := m.RunBackup(r.Context(), "manual")
 	if err != nil {
 		if errors.Is(err, ErrBackupInProgress) {
 			writeError(w, http.StatusConflict, err.Error())

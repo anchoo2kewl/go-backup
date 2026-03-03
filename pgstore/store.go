@@ -88,10 +88,10 @@ func (s *PgStore) SaveSettings(ctx context.Context, bs *backup.BackupSettings) e
 func (s *PgStore) CreateBackupRecord(ctx context.Context, r *backup.BackupRecord) (string, error) {
 	var id string
 	err := s.db.QueryRowContext(ctx, `
-		INSERT INTO backup_history (status, filename, size_bytes, provider_name, file_id, file_url, error_message, started_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		INSERT INTO backup_history (status, triggered_by, filename, size_bytes, provider_name, file_id, file_url, error_message, started_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 		RETURNING id::text`,
-		r.Status, r.Filename, r.SizeBytes, r.ProviderName, r.FileID, r.FileURL, r.ErrorMessage, r.StartedAt,
+		r.Status, r.TriggeredBy, r.Filename, r.SizeBytes, r.ProviderName, r.FileID, r.FileURL, r.ErrorMessage, r.StartedAt,
 	).Scan(&id)
 	if err != nil {
 		return "", fmt.Errorf("pgstore: CreateBackupRecord: %w", err)
@@ -117,7 +117,7 @@ func (s *PgStore) UpdateBackupRecord(ctx context.Context, r *backup.BackupRecord
 // ListBackupRecords returns up to limit records ordered by started_at DESC.
 func (s *PgStore) ListBackupRecords(ctx context.Context, limit int) ([]*backup.BackupRecord, error) {
 	rows, err := s.db.QueryContext(ctx, `
-		SELECT id::text, status, filename, size_bytes, provider_name, file_id, file_url, error_message, started_at, finished_at
+		SELECT id::text, status, triggered_by, filename, size_bytes, provider_name, file_id, file_url, error_message, started_at, finished_at
 		FROM backup_history
 		ORDER BY started_at DESC
 		LIMIT $1`, limit)
@@ -129,7 +129,7 @@ func (s *PgStore) ListBackupRecords(ctx context.Context, limit int) ([]*backup.B
 	for rows.Next() {
 		r := &backup.BackupRecord{}
 		var finAt sql.NullTime
-		if err := rows.Scan(&r.ID, &r.Status, &r.Filename, &r.SizeBytes, &r.ProviderName,
+		if err := rows.Scan(&r.ID, &r.Status, &r.TriggeredBy, &r.Filename, &r.SizeBytes, &r.ProviderName,
 			&r.FileID, &r.FileURL, &r.ErrorMessage, &r.StartedAt, &finAt); err != nil {
 			return nil, fmt.Errorf("pgstore: scan: %w", err)
 		}
@@ -147,9 +147,9 @@ func (s *PgStore) GetBackupRecord(ctx context.Context, id string) (*backup.Backu
 	r := &backup.BackupRecord{}
 	var finAt sql.NullTime
 	err := s.db.QueryRowContext(ctx, `
-		SELECT id::text, status, filename, size_bytes, provider_name, file_id, file_url, error_message, started_at, finished_at
+		SELECT id::text, status, triggered_by, filename, size_bytes, provider_name, file_id, file_url, error_message, started_at, finished_at
 		FROM backup_history WHERE id = $1::uuid`, id,
-	).Scan(&r.ID, &r.Status, &r.Filename, &r.SizeBytes, &r.ProviderName,
+	).Scan(&r.ID, &r.Status, &r.TriggeredBy, &r.Filename, &r.SizeBytes, &r.ProviderName,
 		&r.FileID, &r.FileURL, &r.ErrorMessage, &r.StartedAt, &finAt)
 	if err == sql.ErrNoRows {
 		return nil, fmt.Errorf("pgstore: record %s not found", id)

@@ -111,13 +111,13 @@ func (p *Provider) HTTPClient(ctx context.Context) *http.Client {
 	return c
 }
 
-// Upload uploads a backup file to the configured Drive folder.
-func (p *Provider) Upload(ctx context.Context, name string, r io.Reader, size int64) (*backup.UploadResult, error) {
+// Upload uploads a backup file to the given Drive folder (or root if folderID is empty).
+func (p *Provider) Upload(ctx context.Context, name string, r io.Reader, size int64, folderID string) (*backup.UploadResult, error) {
 	c, err := p.client(ctx)
 	if err != nil {
 		return nil, err
 	}
-	fileID, _, err := uploadFile(ctx, c, name, "", r, size)
+	fileID, _, err := uploadFile(ctx, c, name, folderID, r, size)
 	if err != nil {
 		return nil, err
 	}
