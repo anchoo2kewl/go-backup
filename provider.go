@@ -40,7 +40,7 @@ type UploadResult struct {
 
 // Folder represents a remote folder.
 type Folder struct {
-	ID       string
-	Name     string
-	ParentID string
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	ParentID string `json:"parent_id"`
 }
