@@ -30,15 +30,15 @@ type BackupSettings struct {
 
 // BackupRecord represents one backup run.
 type BackupRecord struct {
-	ID           string
-	Status       string // "running" | "success" | "failed"
-	TriggeredBy  string // "manual" | "scheduled"
-	Filename     string
-	SizeBytes    int64
-	ProviderName string
-	FileID       string
-	FileURL      string
-	ErrorMessage string
-	StartedAt    time.Time
-	FinishedAt   *time.Time
+	ID           string     `json:"id"`
+	Status       string     `json:"status"`        // "running" | "success" | "failed"
+	TriggeredBy  string     `json:"triggered_by"`  // "manual" | "scheduled"
+	Filename     string     `json:"filename"`
+	SizeBytes    int64      `json:"size_bytes"`
+	ProviderName string     `json:"provider_name"`
+	FileID       string     `json:"file_id"`
+	FileURL      string     `json:"file_url"`
+	ErrorMessage string     `json:"error_message"`
+	StartedAt    time.Time  `json:"started_at"`
+	FinishedAt   *time.Time `json:"finished_at,omitempty"`
 }
