@@ -19,12 +19,12 @@ const (
 
 // driveFile is the partial Drive API file metadata.
 type driveFile struct {
-	ID       string `json:"id"`
-	Name     string `json:"name"`
-	MimeType string `json:"mimeType"`
-	Parents  []string `json:"parents,omitempty"`
-	WebViewLink string `json:"webViewLink,omitempty"`
-	Size     string `json:"size,omitempty"`
+	ID          string   `json:"id,omitempty"`
+	Name        string   `json:"name,omitempty"`
+	MimeType    string   `json:"mimeType,omitempty"`
+	Parents     []string `json:"parents,omitempty"`
+	WebViewLink string   `json:"webViewLink,omitempty"`
+	Size        string   `json:"size,omitempty"`
 }
 
 // uploadFile uploads data from r (with known size) to Google Drive.
