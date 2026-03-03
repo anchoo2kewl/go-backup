@@ -194,7 +194,8 @@ func (p *Provider) Ping(ctx context.Context) error {
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("gdrive: ping returned %d", resp.StatusCode)
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("gdrive: ping returned %d: %s", resp.StatusCode, body)
 	}
 	return nil
 }
