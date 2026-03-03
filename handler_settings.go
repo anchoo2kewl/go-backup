@@ -110,7 +110,7 @@ func (m *Manager) handleTestConnection(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := m.provider.Ping(r.Context()); err != nil {
-		writeError(w, http.StatusBadGateway, err.Error())
+		writeError(w, http.StatusServiceUnavailable, err.Error())
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
