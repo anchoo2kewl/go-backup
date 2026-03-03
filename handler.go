@@ -59,6 +59,32 @@ func (m *Manager) routes() http.Handler {
 	})
 }
 
+// PublicHandler returns an http.Handler that serves ONLY the OAuth redirect
+// endpoints (/oauth/start and /oauth/callback). These must be publicly accessible
+// because the browser navigates to /oauth/start without an Authorization header,
+// and the OAuth provider redirects to /oauth/callback with no auth header at all.
+//
+// Mount this on a public (unauthenticated) route before any auth middleware:
+//
+//	mux.PathPrefix("/api/admin/backup/oauth").
+//	    Handler(http.StripPrefix("/api/admin/backup", m.PublicHandler()))
+func (m *Manager) PublicHandler() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		path := strings.TrimPrefix(r.URL.Path, m.basePath)
+		if !strings.HasPrefix(path, "/") {
+			path = "/" + path
+		}
+		switch {
+		case r.Method == http.MethodGet && path == "/oauth/start":
+			m.handleOAuthStart(w, r)
+		case r.Method == http.MethodGet && path == "/oauth/callback":
+			m.handleOAuthCallback(w, r)
+		default:
+			http.NotFound(w, r)
+		}
+	})
+}
+
 // writeJSON writes v as JSON with the given status code.
 func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
