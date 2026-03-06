@@ -117,15 +117,19 @@ func (p *Provider) Upload(ctx context.Context, name string, r io.Reader, size in
 	if err != nil {
 		return nil, err
 	}
-	fileID, _, err := uploadFile(ctx, c, name, folderID, r, size)
+	fileID, webViewLink, err := uploadFile(ctx, c, name, folderID, r, size)
 	if err != nil {
 		return nil, err
 	}
-	// Build a direct download URL for streaming.
-	downloadURL := "https://www.googleapis.com/drive/v3/files/" + fileID + "?alt=media"
+	// Use the Drive web view link so users can navigate to the file directly.
+	// Fall back to the raw API URL only if Drive doesn't return a webViewLink.
+	fileURL := webViewLink
+	if fileURL == "" {
+		fileURL = "https://www.googleapis.com/drive/v3/files/" + fileID + "?alt=media"
+	}
 	return &backup.UploadResult{
 		FileID:     fileID,
-		FileURL:    downloadURL,
+		FileURL:    fileURL,
 		Size:       size,
 		UploadedAt: time.Now(),
 	}, nil
