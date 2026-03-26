@@ -27,8 +27,14 @@ type PostgresDumper struct {
 }
 
 // NewPostgresDumper parses a DATABASE_URL and returns a PostgresDumper.
-// Format: postgres://user:pass@host:port/dbname[?options]
+// Supports both URL format (postgres://user:pass@host:port/dbname) and
+// key=value format (host=x port=5432 user=x password=x dbname=x).
 func NewPostgresDumper(databaseURL string) (*PostgresDumper, error) {
+	// Detect key=value format (contains "dbname=" or "host=" without "://")
+	if !strings.Contains(databaseURL, "://") && (strings.Contains(databaseURL, "dbname=") || strings.Contains(databaseURL, "host=")) {
+		return parseKeyValueDSN(databaseURL)
+	}
+
 	u, err := url.Parse(databaseURL)
 	if err != nil {
 		return nil, fmt.Errorf("backup: invalid DATABASE_URL: %w", err)
@@ -48,6 +54,33 @@ func NewPostgresDumper(databaseURL string) (*PostgresDumper, error) {
 		dbname: dbname,
 		pass:   pass,
 	}, nil
+}
+
+// parseKeyValueDSN parses "host=x port=5432 user=x password=x dbname=x sslmode=disable"
+func parseKeyValueDSN(dsn string) (*PostgresDumper, error) {
+	d := &PostgresDumper{port: "5432"}
+	for _, part := range strings.Fields(dsn) {
+		kv := strings.SplitN(part, "=", 2)
+		if len(kv) != 2 {
+			continue
+		}
+		switch kv[0] {
+		case "host":
+			d.host = kv[1]
+		case "port":
+			d.port = kv[1]
+		case "user":
+			d.user = kv[1]
+		case "password":
+			d.pass = kv[1]
+		case "dbname":
+			d.dbname = kv[1]
+		}
+	}
+	if d.dbname == "" {
+		return nil, fmt.Errorf("backup: key=value DSN missing dbname")
+	}
+	return d, nil
 }
 
 func (d *PostgresDumper) DatabaseName() string { return d.dbname }

@@ -107,6 +107,8 @@ func listFolders(ctx context.Context, client *http.Client, parentID string) ([]*
 	query := "mimeType = 'application/vnd.google-apps.folder' and trashed = false"
 	if parentID != "" {
 		query += " and '" + parentID + "' in parents"
+	} else {
+		query += " and 'root' in parents"
 	}
 
 	url := driveFilesURL + "?q=" + encodeQuery(query) + "&fields=files(id,name,parents)&orderBy=name"
